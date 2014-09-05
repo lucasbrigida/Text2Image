@@ -1,0 +1,32 @@
+.hide {
+  display: none;
+}
+#template-form {
+  border: #000 1px solid;
+}
+#template-form .actions {
+  text-align: right;
+}
+#canvas-template {
+  border: #000 1px solid;
+  width: 100%;
+}
+.progress-box {
+  display: inline-block;
+}
+.progress-box .progress-bar {
+  background: #ddd;
+  color: #fff;
+  width: 100px;
+  height: 15px;
+  display: inline-block;
+}
+.progress-message {
+  display: inline-block;
+}
+.progress-bar .bar {
+  background: #01f;
+  color: #fff;
+  width: 0%;
+  height: 15px;
+}
