@@ -9,6 +9,15 @@ function Reader() {
     });
   }
 
+  function showStart(id){
+    return (function (e, file) {
+      var elem = '#' + id + ' .bar';
+      var bar = document.querySelector(elem);
+      bar.style.width = '0%';
+      showMessage(id, 'loading...')(e, file);
+    });
+  }
+  
   function showProgress(id) {
     return (function (e, file) {
       var elem = '#' + id + ' .bar';
@@ -26,7 +35,7 @@ function Reader() {
     var optionsTemplate = {
       accept: 'image/*',
       on: {
-        loadstart: showMessage('template-progress-bar', 'loading...'),
+        loadstart: showStart('template-progress-bar'),
         progress: showProgress('template-progress-bar'),
         loadend: app.renderTemplate,
       }
