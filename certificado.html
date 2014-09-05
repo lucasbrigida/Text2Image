@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Certificate Generator | rockie.co</title>
+</head>
+
+<body>
+  <style type="text/css">
+    .hide {
+      display: none;
+    }
+    #template-form {
+      border: #000 1px solid;
+    }
+    #template-form .actions {
+      text-align: right;
+    }
+    #canvas-template {
+      border: #000 1px solid;
+      width: 100%;
+    }
+    .progress-box {
+      display: inline-block;
+    }
+    .progress-box .progress-bar {
+      background: #ddd;
+      color: #fff;
+      width: 100px;
+      height: 15px;
+      display: inline-block;
+    }
+    .progress-message {
+      display: inline-block;
+    }
+    .progress-bar .bar {
+      background: #01f;
+      color: #fff;
+      width: 0%;
+      height: 15px;
+    }
+  </style>
+
+  <form id='template-form' method="post" enctype="multipart/form-data">
+    <div>
+      <label for="template">Certificate Template:</label>
+      <input type="file" id="template" name="template" accept="image/*">
+      <div id="template-progress-bar" class="progress-box">
+        <div class="progress-bar">
+          <div class="bar"></div>
+        </div>
+        <div class="progress-message">0%</div>
+      </div>
+    </div>
+
+    <div>
+      <label>User Data Table (.CSV format):</label>
+      <input type="file" id="userdata" name="userdata" accept="text/csv">
+      <div id="userdata-progress-bar" class="progress-box">
+        <div class="progress-bar">
+          <div class="bar"></div>
+        </div>
+        <div class="progress-message">0%</div>
+      </div>
+    </div>
+
+    <div>
+      <label for="scale">Scale:</label>
+      <input id="scale" type="number" value="0.6" step="0.05" min="0" max="1">
+    </div>
+
+    <div>
+      <div class="actions">
+        <input type="submit" value="Gerar Certificado">
+      </div>
+    </div>
+  </form>
+
+  <div>
+    <h4>Certificate Template</h4>
+    <canvas id="canvas-template">Your current browser is old. Update your browser</canvas>
+  </div>
+
+  <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+  <script type="text/javascript" src="js/filereader/filereader.js"></script>
+
+
+  <!-- Utils -->
+  <script type="text/javascript">
+    /*
+     *    Implementation of toBlob(dataURI, mimetype)
+     *
+     *    - Convert DataURI in Blob object.
+     *    - Return Blob
+     */
+    function toBlob(dataURI, mimetype) {
+      if (!dataURI) {
+        return new Uint8Array(0);
+      }
+
+      var BASE64_MARKER = ';base64,';
+      var base64Index = dataURI.indexOf(BASE64_MARKER) + BASE64_MARKER.length;
+      var base64 = dataURI.substring(base64Index);
+      var raw = window.atob(base64);
+      var uInt8Array = new Uint8Array(raw.length);
+
+      for (var i = 0; i < uInt8Array.length; ++i) {
+        uInt8Array[i] = raw.charCodeAt(i);
+      }
+
+      return new Blob([uInt8Array], {
+        type: mimetype
+      });
+    }
+  </script>
+
+  <!-- Image Utils -->
+  <script type="text/javascript" src="js/image-utils.js"></script>
+
+  <!-- Application -->
+  <script type="text/javascript">
+    function App(opts) {
+      var defaultOptions = {
+        env: 'development',
+        x: 0,
+        y: 0,
+        width: 800,
+        height: 768
+      },
+      options = opts || defaultOptions,
+      imgBase64 = null;
+
+      // Render - canvas
+      function renderCanvas(params) {
+        var canvas = document.getElementById(params.id),
+          imageObj = new Image();
+
+        // Rendering
+        imageObj.onload = function () {
+          var img2canvas = new ImageUtils({
+            canvas: canvas,
+            img: imageObj
+          });
+          img2canvas.applyScale(params.scale, 'smooth');
+        };
+
+        imageObj.src = params.dataURL;
+        imageObj.id = 'app-image-preview';
+        imageObj.style.width = '100%';
+
+        if (options.env === 'development') {
+          if(!document.getElementById('app-image-preview')) {
+            document.body.appendChild(imageObj);
+          }else {
+            document.getElementById('app-image-preview').src = imageObj.src;
+          }
+        }
+      }
+
+      function loadCanvas(options) {
+        var opt = {
+          id: options.id,
+          dataURL: options.dataURL || imgBase64,
+          scale: parseFloat(options.scale) || 1
+        };        
+        renderCanvas(opt);
+      }
+
+      // Render Template
+      function renderTemplate(e, file) {
+        imgBase64 = e.target.result;
+        loadCanvas({
+          id: 'canvas-template',
+          dataURL: e.target.result,
+          scale: document.getElementById('scale').value
+        });
+      }
+
+      return ({
+        loadCanvas: loadCanvas,
+        renderTemplate: renderTemplate
+      });
+    }
+
+    var app = new App();
+    
+    //Bind - form
+    document.getElementById('template-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      app.loadCanvas({
+        id: 'canvas-template',
+        scale: document.getElementById('scale').value
+      });
+    });
+  </script>
+
+
+  <!-- Read files -->
+  <script type="text/javascript">
+    (function () {
+      function showMessage(id, message) {
+        return (function (e, file) {
+          var elem = '#' + id + ' .progress-message';
+          var msg = document.querySelector(elem);
+          msg.innerHTML = message;
+        });
+      }
+
+      function showProgress(id) {
+        return (function (e, file) {
+          var elem = '#' + id + ' .bar';
+          var bar = document.querySelector(elem);
+          bar.style.width = e.loaded * 100 / file.size + '%';
+          showMessage(id, bar.style.width)(e, file);
+        });
+      }
+
+      //Read Template
+      var optionsTemplate = {
+        accept: 'image/*',
+        on: {
+          loadstart: showMessage('template-progress-bar', 'loading...'),
+          progress: showProgress('template-progress-bar'),
+          loadend: app.renderTemplate,
+        }
+      };
+      FileReaderJS.setupInput(document.getElementById('template'), optionsTemplate);
+
+
+      //Read .CSV (user Data)
+      var optionsUserData = {
+        accept: 'text/csv',
+        on: {
+          loadstart: showMessage('userdata-progress-bar', 'loading...'),
+          progress: showProgress('userdata-progress-bar'),
+          loadend: function (e, file) {},
+        }
+      };
+      FileReaderJS.setupInput(document.getElementById('userdata'), optionsUserData);
+    })();
+  </script>
+</body>
+
+</html>

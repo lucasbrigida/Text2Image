@@ -1,0 +1,65 @@
+var applyScale, crunchyCanvas, crunchyCtx, demoSetup, scaleDown, smoothCanvas, smoothCtx, stepDown, stepScale, testImage, testSrc;
+
+smoothCanvas = document.getElementById('smoothCanvas');
+
+smoothCtx = smoothCanvas.getContext('2d');
+
+crunchyCanvas = document.getElementById('crunchyCanvas');
+
+crunchyCtx = crunchyCanvas.getContext('2d');
+
+stepScale = 0.5;
+
+scaleDown = function(image, targetScale) {
+  var currentScale;
+  currentScale = 1;
+  while (currentScale * stepScale > targetScale) {
+    currentScale *= stepScale;
+    image = stepDown(image);
+  }
+  return {
+    image: image,
+    remainingScale: targetScale / currentScale
+  };
+};
+
+stepDown = function(image) {
+  var temp;
+  temp = {};
+  temp.canvas = document.createElement('canvas');
+  temp.ctx = temp.canvas.getContext('2d');
+  temp.canvas.width = (image.width * stepScale) + 1;
+  temp.canvas.height = (image.height * stepScale) + 1;
+  temp.ctx.scale(stepScale, stepScale);
+  temp.ctx.drawImage(image, 0, 0);
+  return temp.canvas;
+};
+
+applyScale = function(scale) {
+  var scaledData;
+  if (typeof scale !== 'number') {
+    scale = scale.currentTarget.value;
+  }
+  smoothCanvas.width = crunchyCanvas.width = Math.floor(testImage.width * scale) + 4;
+  smoothCanvas.height = crunchyCanvas.height = Math.floor(testImage.height * scale) + 4;
+  scaledData = scaleDown(testImage, scale);
+  smoothCtx.scale(scaledData.remainingScale, scaledData.remainingScale);
+  smoothCtx.drawImage(scaledData.image, 2, 2);
+  crunchyCtx.scale(scale, scale);
+  return crunchyCtx.drawImage(testImage, 0, 0);
+};
+
+demoSetup = function() {
+  var input;
+  input = document.getElementById('input');
+  input.addEventListener('change', applyScale);
+  return applyScale(Number(input.value));
+};
+
+testImage = document.getElementById('test-image');
+
+testSrc = testImage.getAttribute('data-src');
+
+testImage.onload = demoSetup;
+
+testImage.src = testSrc;
