@@ -11,7 +11,7 @@
 <body>
   <form id='template-form' method="post" enctype="multipart/form-data">
     <div>
-      <label for="template">Certificate Template:</label>
+      <label for="template">Image Template:</label>
       <input type="file" id="template" name="template" accept="image/*">
       <div id="template-progress-bar" class="progress-box">
         <div class="progress-bar">
@@ -34,7 +34,7 @@
 
     <div>
       <label for="scale">Scale:</label>
-      <input id="scale" type="number" value="0.6" step="0.05" min="0" max="1">
+      <input id="scale" type="number" value="1" step="0.05" min="0" max="1">
     </div>
 
     <div>
@@ -55,14 +55,14 @@
 
     <div>
       <div class="actions">
-        <input type="submit" value="Gerar Certificado">
+        <input type="submit" value="Load">
       </div>
     </div>
   </form>
 
   <div>
-    <h4>Certificate Template</h4>
-    <canvas id="canvas-template">Your current browser is old. Update your browser</canvas>
+    <h4>Template Editor</h4>
+    <canvas id="canvas-template" width="600" height="400">Your current browser is old. Update your browser</canvas>
   </div>
 
   <!-- File Reader (Library) -->
@@ -76,6 +76,8 @@
   <script type="text/javascript" src="js/filereader.js"></script>
   <!-- Start Application -->
   <script type="text/javascript" src="js/app.js"></script>
+  <!-- Insert Text -->
+  <script type="text/javascript" src="js/canvastext.js"></script>
 </body>
 
 </html>

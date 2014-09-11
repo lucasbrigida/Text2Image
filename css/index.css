@@ -6,7 +6,8 @@
 }
 #canvas-template {
   border: #000 1px solid;
-  width: 100%;
+  /*width: 100%;*/
+  cursor: crosshair;
 }
 .progress-box {
   display: inline-block;

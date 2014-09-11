@@ -70,11 +70,51 @@ function App(opts) {
       scale: document.getElementById('scale').value,
       scaling: document.getElementById('scaling').value
     });
+    
+    renderFieldSelection({
+      id: 'canvas-template',
+      canvas: document.getElementById('canvas-template'),
+      scale: parseFloat(document.getElementById('scale').value)
+    });
+  }
+
+  // Render Pseudo-Fields
+  function renderFieldSelection(opts) {
+    var doc = new Text();
+    doc.init(opts)
+    .on('mouse-select', function (options) {
+      var rect = opts.canvas.getBoundingClientRect();
+      //console.log(options.x, options.y,options.x-rect.left, options.y-rect.top);
+      
+      options.x -=rect.left;
+      //options.x /= opts.scale;
+      
+      options.y -= rect.top;
+      //options.y /= opts.scale;
+      
+      doc.selection(options)
+        .add({
+          style: {
+            fontsize: options.height * 0.5,
+            font: 'Calibri'
+          },
+          x: options.x,
+          y: options.y,
+          width: options.width,
+          height: options.height,
+          text: new Date().toLocaleDateString(),
+          color: 'red'
+        })
+        .fields(function (fields) {
+          console.log(fields);
+        });
+    });
   }
 
   return ({
     loadCanvas: loadCanvas,
     renderTemplate: renderTemplate,
-    setOptions: setOptions
+    setOptions: setOptions,
+    renderFieldSelection: renderFieldSelection
   });
 }
