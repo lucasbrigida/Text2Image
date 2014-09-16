@@ -1,4 +1,4 @@
-function Text() {
+function CanvasText(params) {
   'use strict';
   var opts = {
     x: 0,
@@ -19,47 +19,70 @@ function Text() {
     undoIndex: 0
   };
 
-  var canvas, context, selections = [];
+  var canvas = params.canvas || null,
+    context = canvas ? canvas.getContext('2d') : null,
+    selections = [],
+    fieldList = [];
+
 
   function init(options) {
-    //Check params
-    if (!options.id) return (null);
-
-    opts.id = options.id;
-
-    canvas = document.getElementById(options.id);
+    canvas = options.canvas;
     context = canvas.getContext('2d');
-    return (this);
-  }
-
-  function insertFields(field) {
-    selections.push(field);
     return this;
   }
 
-  function fields(cb) {
-    cb(selections);
+
+  function insertSelection(sel) {
+    selections.push(sel);
     return this;
   }
 
-  function undo() {
-    canvas.clearRect();
+
+  function removeSelection(sel) {
+    if ((typeof (sel) === 'number') || (typeof (sel) === 'string')) {
+      selections.splice(parseInt(sel), 1);
+    }
+
+    if (typeof (sel) === 'object') {
+      for (var i in selections) {
+        if (selections[i] === sel) {
+          selections.splice(i, 1);
+          break;
+        }
+      }
+    }
+
     return this;
   }
 
-  function redo() {
+
+  function insertField(field) {
+    fieldList.push(field);
     return this;
   }
 
-  function debug() {
-    canvas.addEventListener('mousemove', function (e) {
-      var rect = document.getElementById('canvas-template').getBoundingClientRect();
-      console.log(e.x, e.y,e.x-rect.left, e.y-rect.top);
-    }, false);
+
+  function removeField(field) {
+    if ((typeof (field) === 'number') || (typeof (field) === 'string')) {
+      fieldList.splice(parseInt(fields), 1);
+    }
+
+    if (typeof (field) === 'object') {
+      for (var i in fieldList) {
+        if (fieldList[i] === field) {
+          fieldList.splice(i, 1);
+          break;
+        }
+      }
+    }
+
     return this;
   }
 
-  function add(options) {
+
+  function drawText(textParams) {
+    var options = textParams; //refactor
+
     // Calculate size average
     options.x += options.width * opts.margin.left;
     options.y += options.height * opts.margin.top;
@@ -82,35 +105,50 @@ function Text() {
       throw new Error('x,y,text params undefined');
     }
     context.fillText(options.text || '', options.x, options.y);
+  }
 
+
+  function add(options) {
+    drawText(options);
+    insertField(options); //Insert field in field list
     return this;
   }
 
-  function selection(options) {
+
+  function drawSelection(selParams) {
+    var options = selParams; // refactor
+    
+    var rect = canvas.getBoundingClientRect();
+    options.x -= rect.left;
+    options.y -= rect.top;
+        
     //Check params
     if (!(options.x && options.y && options.width && options.height)) {
       throw new Error('x,y,width,height params undefined');
     }
 
-    //console.log(options);
-    
     opts.x = options.x;
     opts.y = options.y;
-
-    insertFields({
-      x: options.x,
-      y: options.y,
-      width: options.width,
-      height: options.height
-    });
 
     context.beginPath();
     context.rect(options.x, options.y, options.width, options.height);
     context.lineWidth = options.lineWidth || opts.lineWidth;
     context.strokeStyle = options.borderColor || opts.borderColor;
     context.stroke();
+  }
+
+
+  function selection(options) {
+    drawSelection(options);
+    insertSelection({
+      x: options.x,
+      y: options.y,
+      width: options.width,
+      height: options.height
+    });
     return this;
   }
+
 
   function on(event, cb) {
     switch (event) {
@@ -131,12 +169,77 @@ function Text() {
     return this;
   }
 
+
+  function all(type) {
+    switch (type) {
+    case 'selections':
+      return selections;
+      break;
+    case 'texts':
+      return fieldList;
+      break;
+    }
+  }
+
+
+  function fields(cb) {
+    cb(fieldList);
+    return this;
+  }
+
+
+  function undo() {
+    canvas.clearRect();
+    return this;
+  }
+
+
+  function redo() {
+    return this;
+  }
+
+
+  function refresh(mode) {
+    switch (mode) {
+    case 'selections':
+      all('selections').forEach(function (sel) {
+        console.log(sel);
+        drawSelection(sel);
+      });
+      break;
+    case 'texts':
+      all('texts').forEach(function (text) {
+        console.log(text);
+        drawText(text)
+      });
+      break;
+    default:
+      refresh('selections');
+      refresh('texts');
+      break;
+    }
+  }
+
+
+  function debug() {
+    canvas.addEventListener('mousemove', function (e) {
+      var rect = document.getElementById('canvas-template').getBoundingClientRect();
+      console.log(e.x, e.y, e.x - rect.left, e.y - rect.top);
+    }, false);
+    return this;
+  }
+
+
   return ({
     init: init,
     selection: selection,
     add: add,
     on: on,
     fields: fields,
-    debug: debug
+    debug: debug,
+    all: all,
+    removeSelection: removeSelection,
+    removeField: removeField,
+    refresh: refresh
   });
 }

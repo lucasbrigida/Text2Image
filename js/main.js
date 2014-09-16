@@ -1,20 +1,39 @@
 function App(opts) {
-  var defaultOptions = {
+  var self = this,
+    defaultOptions = {
       env: 'development',
       x: 0,
       y: 0
     },
     options = opts || defaultOptions,
-    imgBase64 = null;
+    imgBase64 = null,
+    onEvents = {
+      onload: []
+    },
+    text = new CanvasText({
+      canvas: opts.canvas || null
+    });
+
 
   function setOptions(key, value) {
     if (options[key]) options[key] = value;
     return options[key];
   }
 
+
+  function clearCanvas() {
+    if (!opts.canvas) {
+      throw new Error("Canvas isn't defined");
+    }
+    var context = opts.canvas.getContext('2d');
+    context.clearRect(0, 0, opts.canvas.width, opts.canvas.height);
+    return this;
+  }
+
+
   // Render - canvas
   function renderCanvas(params) {
-    var canvas = document.getElementById(params.id),
+    var canvas = params.canvas,
       imageObj = new Image();
 
     // Rendering
@@ -26,6 +45,7 @@ function App(opts) {
       img2canvas.applyScale(parseFloat(params.scale), params.scaling);
     };
 
+    // Image Preview - DEBUG
     imageObj.src = params.dataURL;
     imageObj.id = 'app-image-preview';
     imageObj.style.width = '100%';
@@ -42,14 +62,18 @@ function App(opts) {
         document.getElementById('app-image-preview').remove();
       }
     }
+
+    if (typeof params.done === 'function') params.done();
   }
+
 
   function loadCanvas(options) {
     var opt = {
-      id: options.id,
+      canvas: options.canvas,
       dataURL: options.dataURL || imgBase64,
       scale: options.scale || 1,
-      scaling: options.scaling
+      scaling: options.scaling,
+      done: options.done
     };
 
     /* TODO
@@ -61,60 +85,78 @@ function App(opts) {
     for (var i in [0, 1]) renderCanvas(opt);
   }
 
+
   // Render Template
   function renderTemplate(e, file) {
     imgBase64 = e.target.result;
     loadCanvas({
-      id: 'canvas-template',
+      canvas: document.getElementById('canvas-template'),
       dataURL: e.target.result,
       scale: document.getElementById('scale').value,
-      scaling: document.getElementById('scaling').value
-    });
-    
-    renderFieldSelection({
-      id: 'canvas-template',
-      canvas: document.getElementById('canvas-template'),
-      scale: parseFloat(document.getElementById('scale').value)
+      scaling: document.getElementById('scaling').value,
+      done: function () {
+        send('onload');
+      }
     });
   }
 
-  // Render Pseudo-Fields
-  function renderFieldSelection(opts) {
-    var doc = new Text();
-    doc.init(opts)
-    .on('mouse-select', function (options) {
-      var rect = opts.canvas.getBoundingClientRect();
-      //console.log(options.x, options.y,options.x-rect.left, options.y-rect.top);
-      
-      options.x -=rect.left;
-      //options.x /= opts.scale;
-      
-      options.y -= rect.top;
-      //options.y /= opts.scale;
-      
-      doc.selection(options)
-        .add({
-          style: {
-            fontsize: options.height * 0.5,
-            font: 'Calibri'
-          },
-          x: options.x,
-          y: options.y,
-          width: options.width,
-          height: options.height,
-          text: new Date().toLocaleDateString(),
-          color: 'red'
-        })
-        .fields(function (fields) {
-          console.log(fields);
-        });
-    });
+
+  function refresh(cb) {
+    //clearCanvas();
+    /*loadCanvas({
+      canvas: options.canvas,
+      dataURL: imgBase64,
+      scale: options.scale || 1,
+      scaling: options.scaling || 'smooth',
+      done: cb
+    });*/
+    cb();
+    return this;
   }
+
+
+  function on(event, cb) {
+    switch (event) {
+    case 'onload':
+      if (typeof cb === 'function') {
+        onEvents.onload.push(cb);
+      }
+      break;
+    }
+  }
+
+
+  function send(event) {
+    switch (event) {
+    case 'onload':
+      onEvents.onload.reverse();
+      while (onEvents.onload.length > 0) {
+        onEvents.onload.pop()();
+      }
+      break;
+    }
+  }
+
+
+  function removeField(index) {
+    refresh(function () {
+      text.removeField(index)
+        .removeSelection(index)
+        .refresh();
+    });
+    return this;
+  }
+
 
   return ({
     loadCanvas: loadCanvas,
     renderTemplate: renderTemplate,
+    clearCanvas: clearCanvas,
+    refresh: refresh,
     setOptions: setOptions,
-    renderFieldSelection: renderFieldSelection
+    renderFieldSelection: renderFieldSelection,
+    removeField: removeField,
+    on: on,
+    text: text
   });
 }

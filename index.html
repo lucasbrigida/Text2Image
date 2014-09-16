@@ -21,7 +21,7 @@
       </div>
     </div>
 
-    <div>
+    <div class="hide">
       <label>User Data Table (.CSV format):</label>
       <input type="file" id="userdata" name="userdata" accept="text/csv">
       <div id="userdata-progress-bar" class="progress-box">
@@ -32,12 +32,12 @@
       </div>
     </div>
 
-    <div>
+    <div class="hide">
       <label for="scale">Scale:</label>
       <input id="scale" type="number" value="1" step="0.05" min="0" max="1">
     </div>
 
-    <div>
+    <div class="hide">
       <label for="scaling">Scaling Mode:</label>
       <select name="scaling" id="scaling">
         <option value="smooth">Smooth</option>
@@ -45,7 +45,7 @@
       </select>
     </div>
 
-    <div>
+    <div class="hide">
       <label for="mode">Environment:</label>
       <select name="mode" id="mode">
         <option value="production">Production</option>
@@ -59,10 +59,15 @@
       </div>
     </div>
   </form>
-
+  
   <div>
     <h4>Template Editor</h4>
     <canvas id="canvas-template" width="600" height="400">Your current browser is old. Update your browser</canvas>
+  </div>
+
+  <div id="fieldlist">
+    <h4>Field List</h4>
+    <div class="list"></div>
   </div>
 
   <!-- File Reader (Library) -->
@@ -74,10 +79,10 @@
   <script type="text/javascript" src="js/main.js"></script>
   <!-- Read files -->
   <script type="text/javascript" src="js/filereader.js"></script>
-  <!-- Start Application -->
-  <script type="text/javascript" src="js/app.js"></script>
   <!-- Insert Text -->
   <script type="text/javascript" src="js/canvastext.js"></script>
+  <!-- Start Application -->
+  <script type="text/javascript" src="js/app.js"></script>
 </body>
 
 </html>

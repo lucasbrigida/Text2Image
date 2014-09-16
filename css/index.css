@@ -1,7 +1,8 @@
-#template-form {
+#template-form, #fields-form, #fieldlist {
+  margin-top: 10px;
   border: #000 1px solid;
 }
-#template-form .actions {
+#template-form .actions, #fields-form .actions {
   text-align: right;
 }
 #canvas-template {
@@ -27,4 +28,7 @@
   color: #fff;
   width: 0%;
   height: 15px;
+}
+.hide {
+  display: none;
 }
